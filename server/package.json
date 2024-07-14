@@ -1,16 +1,26 @@
 {
   "name": "server",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "WebSocket server using TypeScript and Socket.IO",
+  "main": "dist/index.js",
   "scripts": {
     "dev": "tsc-watch --onSuccess \"node dist/index.js\"",
-    "start": "node dist/index.js"
+    "start": "node dist/index.js",
+    "build": "tsc"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "tsc-watch": "^6.2.0"
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.10",
+    "@types/uuid": "^10.0.0",
+    "tsc-watch": "^6.2.0",
+    "typescript": "^5.5.3"
   }
 }
