@@ -16,7 +16,7 @@ type Position = {
 
 const port = 8000;
 
-const users: { [key: string]: Position } = {};
+const users: { [key: string]: Position | null } = {};
 
 const handleMessage = (position: Position, uuid: string, socket: Socket) => {
   users[uuid] = position;
@@ -30,13 +30,14 @@ const handleClose = (uuid: string, socket: Socket) => {
 };
 
 const broadcast = (socket: Socket) => {
+  console.log(users)
   socket.broadcast.emit("update", users);
 };
 
 io.on("connection", (socket: Socket) => {
   console.log(`Connected`);
   const uuid = v4();
-  
+
   socket.on("move-mouse", (position: Position) => {
     handleMessage(position, uuid, socket);
   });
