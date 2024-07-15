@@ -3,51 +3,47 @@ import { Server, Socket } from "socket.io";
 import { v4 } from "uuid";
 
 const server = createServer();
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+  },
+});
+
+type Position = {
+  x: number;
+  y: number;
+};
 
 const port = 8000;
 
-const users: any = {};
+const users: { [key: string]: Position } = {};
 
-const handleMessage = (data: any, uuid: string) => {
-  const user = users[uuid];
-  user.state = data;
-  broadcast();
-  console.log(
-    `${user.username} updated their state: ${JSON.stringify(user.state)}`
-  );
+const handleMessage = (position: Position, uuid: string, socket: Socket) => {
+  users[uuid] = position;
+  broadcast(socket);
 };
 
-const handleClose = (uuid: string) => {
-  console.log(`${users[uuid].username} disconnected`);
+const handleClose = (uuid: string, socket: Socket) => {
+  console.log(`Disconnected`);
   delete users[uuid];
-  broadcast();
+  broadcast(socket);
 };
 
-const broadcast = () => {
-  io.emit("update", users);
+const broadcast = (socket: Socket) => {
+  socket.broadcast.emit("update", users);
 };
 
 io.on("connection", (socket: Socket) => {
-  const { username } = socket.handshake.query;
-  if (typeof username !== "string") {
-    socket.disconnect();
-    return;
-  }
-  console.log(`${username} connected`);
+  console.log(`Connected`);
   const uuid = v4();
-  users[uuid] = {
-    username,
-    state: {},
-  };
-
-  socket.on("message", (data: any) => {
-    handleMessage(data, uuid);
+  
+  socket.on("move-mouse", (position: Position) => {
+    handleMessage(position, uuid, socket);
   });
 
-  socket.on("disconnect", () => handleClose(uuid));
+  socket.on("disconnect", () => handleClose(uuid, socket));
 });
 
 server.listen(port, () => {
-  console.log(`WebSocket server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });
