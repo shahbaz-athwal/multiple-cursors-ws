@@ -24,7 +24,6 @@ const handleMessage = (position: Position, uuid: string, socket: Socket) => {
 };
 
 const handleClose = (uuid: string, socket: Socket) => {
-  console.log(`Disconnected`);
   delete users[uuid];
   broadcast(socket);
 };
@@ -35,6 +34,7 @@ const broadcast = (socket: Socket) => {
 
 io.on("connection", (socket: Socket) => {
   const uuid = v4();
+  socket.emit("user-id", uuid); 
 
   socket.on("move-mouse", (position: Position) => {
     handleMessage(position, uuid, socket);

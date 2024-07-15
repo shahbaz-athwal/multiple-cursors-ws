@@ -5,6 +5,7 @@ import throttle from "lodash.throttle";
 import { Cursor } from "@/components/Cursor";
 
 const socket = io("http://localhost:8000");
+
 const THROTTLE = 400;
 
 type Position = {
@@ -15,6 +16,11 @@ type Users = { [key: string]: Position | null };
 
 export default function Home() {
   const [users, setUsers] = useState<Users>({});
+  const [userId, setUserId] = useState<string | null>(null); 
+
+  socket.on("user-id", (id) => {
+    setUserId(id); 
+  });
 
   const sendPosition = (position: Position) => {
     socket.emit("move-mouse", position);
@@ -23,13 +29,14 @@ export default function Home() {
   const sendPositionThrottled = useRef(throttle(sendPosition, THROTTLE));
 
   const renderCursor = (users: Users) => {
-      return Object.keys(users).map(id => {
-        const user = users[id]
-        if (!user) return
+    return Object.keys(users).map(id => {
+      if (id === userId) return null; 
+      const user = users[id];
+      if (!user) return null;
   
-        return <Cursor key={id} point={[user.x, user.y]} />
-      })
-  }
+      return <Cursor key={id} point={[user.x, user.y]} />;
+    });
+  };
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -40,10 +47,9 @@ export default function Home() {
     };
 
     socket.on("update", (users) => {
-      console.log("Update Occurred");
-      
       setUsers(users);
-    })
+    });
+
 
     window.addEventListener("mousemove", handleMouseMove);
 
@@ -52,5 +58,5 @@ export default function Home() {
     };
   }, []);
 
-  return <pre>{renderCursor(users)}</pre>;
+  return <div>{renderCursor(users)}</div>;
 }
