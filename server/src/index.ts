@@ -14,7 +14,7 @@ type Position = {
   y: number;
 };
 
-const port = 8000;
+const port = process.env.PORT || 8000;
 
 const users: { [key: string]: Position | null } = {};
 
