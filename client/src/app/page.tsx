@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { io } from "socket.io-client";
 import throttle from "lodash.throttle";
 import { Cursor } from "@/components/Cursor";
@@ -14,19 +14,20 @@ type Position = {
 };
 type Users = { [key: string]: Position | null };
 
+let userId: string;
+
+socket.on("user-id", (id: string) => {
+  userId = id;
+});
+
 export default function Home() {
   const [users, setUsers] = useState<Users>({});
-  const [userId, setUserId] = useState<string | null>(null);
-
-  socket.on("user-id", (id: string) => {
-    setUserId(id);
-  });
 
   const sendPosition = useCallback((position: Position) => {
     socket.emit("move-mouse", position);
   }, []);
 
-  const sendPositionThrottled = useRef(throttle(sendPosition, THROTTLE));
+  const sendPositionThrottled = useMemo(() => throttle(sendPosition, THROTTLE), [sendPosition]);
 
   const renderCursor = useCallback(
     (users: Users) => {
@@ -38,12 +39,12 @@ export default function Home() {
         return <Cursor key={id} point={[user.x, user.y]} />;
       });
     },
-    [users, userId]
+    [users]
   );
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      sendPositionThrottled.current({
+      sendPositionThrottled({
         x: e.clientX,
         y: e.clientY,
       });
@@ -57,8 +58,9 @@ export default function Home() {
 
     return () => {
       window.removeEventListener("mousemove", handleMouseMove);
+      sendPositionThrottled.cancel();
     };
-  }, []);
+  }, [sendPositionThrottled]);
 
   return <div>{renderCursor(users)}</div>;
 }
