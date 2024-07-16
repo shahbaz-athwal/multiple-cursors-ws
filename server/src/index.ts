@@ -34,12 +34,12 @@ const broadcast = (socket: Socket) => {
 
 io.on("connection", (socket: Socket) => {
   const uuid = v4();
-  socket.emit("user-id", uuid); 
-
+  
   socket.on("move-mouse", (position: Position) => {
     handleMessage(position, uuid, socket);
   });
-
+  
+  socket.emit("user-id", uuid); 
   socket.on("disconnect", () => handleClose(uuid, socket));
 });
 
